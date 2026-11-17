@@ -48,8 +48,16 @@ backend는 Entra 인증(`use_azuread_auth = true`)을 쓰므로 state를 읽고 
 ## 구독 형식
 
 Azure Front Door는 Free Trial 구독에서 만들 수 없습니다(`Free Trial and Student account is forbidden for Azure Frontdoor resources`).
-`8-runway-target`을 적용하려면 구독이 종량제(Pay-As-You-Go) 이상이어야 합니다. Free Trial의 지역 vCPU 한도는 4입니다.
-한도는 앱 instance 수와 rollout에 필요한 여유 instance를 제한합니다(`az vm list-usage --location koreacentral`).
+`8-runway-target`을 적용하려면 구독이 종량제(Pay-As-You-Go) 이상이어야 합니다.
+
+VM 크기는 vCPU quota가 있는 family에서 고릅니다. `koreacentral`의 지역 vCPU 한도는 10이고, B-series v2(`standardBsv2Family`·`standardBasv2Family`)의
+family 한도는 0입니다. 그래서 `Standard_B2s_v2`는 `QuotaExceeded`로 배포되지 않습니다. Agent Runway 환경 `dmz`의 `sizes`에는 amd64 `Standard_D2s_v6`(Dsv6),
+arm64 `Standard_D2ps_v7`(Dpsv7)처럼 한도가 있는 family를 씁니다. 지역 한도는 앱 instance 수와 rollout에 필요한 여유 instance를 함께 제한합니다.
+한도는 다음 명령으로 확인하고, 더 필요하면 포털 **할당량**에서 요청합니다.
+
+```bash
+az vm list-usage --location koreacentral -o table
+```
 
 ## Terraform 작성 규칙
 
