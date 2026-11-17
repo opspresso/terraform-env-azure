@@ -10,7 +10,7 @@ Agent Runway 계정 `clush-azure`(이 구독)와 환경 `dmz`(`vmss` target)가 
 | VNet·subnet | `vnet-agent-runway-dmz`(`10.40.0.0/16`), `snet-apps`(`10.40.0.0/24`) | 앱 instance(`subnetId`). 기본 outbound 접근이 없으므로 instance는 앱 load balancer의 outbound rule로 인터넷에 나간다 |
 | NSG | `nsg-agent-runway-dmz-apps` | 인터넷에서는 Front Door(`AzureFrontDoor.Backend`)의 80번 포트만 받는다 |
 | Key Vault | `kv-runway-dmz-<구독 앞 8자>` | 환경 `dmz`의 Variable(`keyVault`). RBAC 권한 모델, soft delete 7일, purge protection 없음 |
-| Storage account | `strunwaydmz<구독 앞 8자>` | 앱 bundle(`artifactStorage`). shared key 없음, 90일 지난 blob 삭제 |
+| Storage account | `strunwaydmz<구독 앞 8자>` | 앱 bundle(`artifactStorage`). shared key 없음. 배포 workflow가 앱마다 현재 bundle만 남긴다 |
 | Front Door Standard | profile `afd-agent-runway-dmz`, endpoint `runway` | 앱 HTTPS 진입점(`frontDoorProfileId`). 배포 workflow가 앱 host마다 관리형 인증서 custom domain과 route를 더한다 |
 
 DNS zone `dmz.rovr.dev`(`dnsZoneId`)는 `3-domain`이 만들고, 이 root는 그 state를 읽습니다.
