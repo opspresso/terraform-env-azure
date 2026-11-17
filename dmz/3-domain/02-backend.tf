@@ -1,0 +1,25 @@
+terraform {
+  required_version = "1.17.1"
+
+  backend "azurerm" {
+    subscription_id      = "ce097188-9b76-44f9-8bbd-366ae73ade04"
+    resource_group_name  = "rg-terraform-state"
+    storage_account_name = "tfstatece097188"
+    container_name       = "tfstate"
+    key                  = "dmz/domain-dmz.tfstate"
+    use_azuread_auth     = true
+  }
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "5.14.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  subscription_id = var.subscription_id
+
+  features {}
+}
