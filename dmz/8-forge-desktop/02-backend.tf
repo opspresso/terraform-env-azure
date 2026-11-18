@@ -23,10 +23,6 @@ terraform {
       source  = "Azure/azapi"
       version = "2.14.0"
     }
-    msgraph = {
-      source  = "microsoft/msgraph"
-      version = "0.6.0"
-    }
   }
 }
 
@@ -41,5 +37,3 @@ provider "azuread" {}
 provider "azapi" {
   subscription_id = var.subscription_id
 }
-
-provider "msgraph" {}
