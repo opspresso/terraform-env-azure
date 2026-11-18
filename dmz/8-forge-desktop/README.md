@@ -34,7 +34,7 @@ host pool 등록 token은 Terraform이 관리하지 않습니다. Agent Forge가
 | `DevDesktop-Users` | `rg-forge-desktop-dmz-hosts` | `Virtual Machine User Login` | Entra join VM에 일반 사용자로 로그인한다 |
 | Azure Virtual Desktop(앱 ID `9cdead84-a844-4324-93f2-b2e6bb768d07`) | `rg-forge-desktop-dmz-hosts` | `Desktop Virtualization Power On Contributor` | Start VM on Connect |
 | Azure Virtual Desktop | 구독 | `Desktop Virtualization Power On Off Contributor` | 개인 scaling plan. 구독보다 좁은 범위에서는 autoscale이 동작하지 않는다 |
-| `agent-forge-desktop` | 아래 표 | 사용자 지정 역할 4개 | 데스크톱 생성·전원·배정·반납 |
+| `agent-forge-desktop` | 아래 표 | 사용자 지정 역할 5개 | 데스크톱 생성·전원·배정·반납, 콘솔의 풀 자원 조회 |
 
 `agent-forge-desktop`의 federated credential은 `eks-demo` OIDC issuer가 서명한 service account `system:serviceaccount:agent-forge:agent-forge`의 token(audience `api://AzureADTokenExchange`)을 믿습니다.
 Agent Forge에는 Key Vault 권한과 `rg-forge-desktop-dmz-hosts` 밖의 쓰기 권한이 없습니다. 기본 제공 역할 `Virtual Machine Contributor`는 Storage key 조회·백업 vault 쓰기를,
@@ -46,6 +46,7 @@ action은 Agent Forge Azure provider가 보내는 호출과 같습니다. 데스
 | --- | --- | --- |
 | `Agent Forge desktop operator (dmz)` | `rg-forge-desktop-dmz-hosts` | `Microsoft.Resources/subscriptions/resourceGroups/read`, `Microsoft.Resources/deployments/{read,write,operations/read,operationstatuses/read}`, `Microsoft.Compute/virtualMachines/{read,write,delete,start/action,deallocate/action,instanceView/read}`, `Microsoft.Compute/virtualMachines/extensions/{read,write}`, `Microsoft.Compute/virtualMachines/runCommands/{read,write}`, `Microsoft.Compute/disks/{read,write,delete}`, `Microsoft.Network/networkInterfaces/{read,write,delete,join/action}` |
 | `Agent Forge subnet joiner (dmz)` | subnet `desktops` | `Microsoft.Network/virtualNetworks/subnets/{read,join/action}` |
+| `Agent Forge network reader (dmz)` | VNet `vnet-forge-desktop-dmz` | `Microsoft.Network/virtualNetworks/read`. Forge 콘솔이 Azure Resource Graph로 VNet의 subnet을 풀 선택지로 보여 준다 |
 | `Agent Forge host pool operator (dmz)` | host pool | `Microsoft.DesktopVirtualization/hostpools/{read,write,retrieveRegistrationToken/action}`, `hostpools/sessionhosts/{read,write,delete}`, `hostpools/sessionhosts/usersessions/{read,delete}` |
 | `Agent Forge image reader (dmz)` | 이미지 정의 `dev-desktop-win10` | `Microsoft.Compute/galleries/images/read`, `Microsoft.Compute/galleries/images/versions/read` |
 

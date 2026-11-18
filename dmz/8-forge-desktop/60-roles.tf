@@ -110,6 +110,20 @@ resource "azurerm_role_definition" "forge_host_pool" {
   assignable_scopes = [azurerm_virtual_desktop_host_pool.this.id]
 }
 
+# The Forge console lists the subnets a pool can use from the VNet's properties (Azure Resource Graph), which needs
+# read on the VNet itself; the subnet role above covers only the subnet.
+resource "azurerm_role_definition" "forge_network" {
+  name        = "Agent Forge network reader (dmz)"
+  scope       = azurerm_virtual_network.this.id
+  description = "Reads the desktops VNet so the Forge console can offer its subnets."
+
+  permissions {
+    actions = ["Microsoft.Network/virtualNetworks/read"]
+  }
+
+  assignable_scopes = [azurerm_virtual_network.this.id]
+}
+
 resource "azurerm_role_definition" "forge_image" {
   name        = "Agent Forge image reader (dmz)"
   scope       = azurerm_shared_image.win10.id
@@ -129,6 +143,7 @@ resource "azurerm_role_assignment" "forge" {
   for_each = {
     desktops  = azurerm_role_definition.forge_desktops
     subnet    = azurerm_role_definition.forge_subnet
+    network   = azurerm_role_definition.forge_network
     host_pool = azurerm_role_definition.forge_host_pool
     image     = azurerm_role_definition.forge_image
   }
