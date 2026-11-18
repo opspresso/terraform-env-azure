@@ -88,7 +88,7 @@ Agent Forge가 데스크톱을 만들 때 지킬 점:
 - Windows 10 client 이미지이므로 `licenseType = Windows_Client`를 씁니다.
 - admin 사용자 이름으로 `pkrbuild`를 쓰지 않습니다. 이미지가 첫 부팅 때 그 계정을 지웁니다.
 - system-assigned identity만 씁니다. user-assigned identity를 붙이지 않습니다.
-- 이미지 정의는 trusted launch를 지원합니다(`trusted_launch = true`). Agent Forge는 `securityType = TrustedLaunch`(secure boot·vTPM)로 만듭니다. OS 디스크는 `Premium_LRS`입니다.
+- 이미지 정의의 security type은 `TrustedLaunch`입니다(`trusted_launch = true`). 이 이미지로 만든 VM은 모두 trusted launch(secure boot·vTPM)이고, Agent Forge 풀은 `trustedLaunch = true`여야 합니다. Packer가 trusted launch VM에서 캡처한 버전은 `TrustedLaunchSupported` 정의에 게시되지 않습니다. OS 디스크는 `Premium_LRS`입니다.
 
 ## 비용과 위험
 

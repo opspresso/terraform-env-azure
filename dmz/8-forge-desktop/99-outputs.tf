@@ -44,9 +44,9 @@ output "gallery_image_version_id" {
   value = "${azurerm_shared_image.win10.id}/versions/${var.image_version}"
 }
 
-# The image definition accepts trusted launch and standard VMs; Agent Forge creates trusted launch VMs.
+# The image definition accepts trusted launch VMs only; Agent Forge creates trusted launch VMs.
 output "trusted_launch" {
-  value = azurerm_shared_image.win10.trusted_launch_supported
+  value = azurerm_shared_image.win10.trusted_launch_enabled
 }
 
 output "egress_ip" {
