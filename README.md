@@ -9,6 +9,9 @@ Agent Runway와 그 설치 계정 opspresso(`396608815058`)의 리소스는 [ter
 | --- | --- |
 | [3-domain](dmz/3-domain/README.md) | Azure DNS zone `dmz.rovr.dev`. opspresso `rovr.dev`가 위임한다 |
 | [8-runway-target](dmz/8-runway-target/README.md) | Agent Runway 계정 `clush-azure`와 환경 `dmz`의 `vmss` target: VNet·subnet, Variable Key Vault, bundle Storage, Front Door profile, Entra 앱 2개(federated credential)와 역할 |
+| [8-forge-desktop](dmz/8-forge-desktop/README.md) | Agent Forge 개발자 데스크톱 기반: VNet·NAT Gateway, AVD workspace·개인 host pool·app group·scaling plan, Compute Gallery, Azure Policy, 그룹 `DevDesktop-Users`, Entra 앱 `agent-forge-desktop`(federated credential)과 역할 |
+
+`images/`에는 Packer 이미지 template이 있습니다. [dev-desktop-win10](images/dev-desktop-win10/README.md)은 `8-forge-desktop`의 gallery에 Windows 10 개발자 데스크톱 이미지를 게시합니다.
 
 처음 적용할 때의 순서는 다음과 같습니다.
 
@@ -16,17 +19,20 @@ Agent Runway와 그 설치 계정 opspresso(`396608815058`)의 리소스는 [ter
 2. terraform-env-opsp `demo/8-app-delivery`: `dmz.rovr.dev` NS 위임(`3-domain`의 `name_servers`)
 3. `8-runway-target`
 4. Agent Runway 계정 `clush-azure` 추가, 접근 확인, 환경 `dmz`에 `vmss` target 추가
+5. `8-forge-desktop`
+6. `images/dev-desktop-win10`: 이미지 버전 게시
+7. Agent Forge 데스크톱 풀에 `8-forge-desktop` 출력 입력
 
 ## 디렉터리 이름
 
 root는 `dmz/<NN>-<주제>`입니다. `dmz`는 이 구독을 쓰는 Agent Runway 환경 이름입니다.
 번호는 terraform-env-demo·terraform-env-opsp와 같은 의존 순서를 따릅니다: `3` DNS, `8` 서비스별 리소스. 번호가 작은 root를 먼저 적용합니다.
-구독 기본 설정(`1`)과 공유 네트워크(`2`) root는 없습니다. 네트워크는 `8-runway-target`이 만듭니다.
+구독 기본 설정(`1`)과 공유 네트워크(`2`) root는 없습니다. 네트워크는 `8-runway-target`과 `8-forge-desktop`이 각자 만듭니다.
 
 ## 준비와 실행
 
 Terraform `1.17.1`과 Azure CLI가 필요합니다. 적용하는 사용자는 구독의 Owner(또는 Contributor와 Role Based Access Control Administrator)여야 하고,
-`8-runway-target`의 Entra 앱을 만들려면 테넌트에서 앱 등록 권한이 있어야 합니다. provider는 Azure CLI 로그인을 씁니다.
+`8-runway-target`·`8-forge-desktop`의 Entra 앱을 만들려면 테넌트에서 앱 등록 권한이, `8-forge-desktop`의 보안 그룹을 만들려면 그룹 생성 권한이 있어야 합니다. provider는 Azure CLI 로그인을 씁니다.
 provider와 backend는 `subscription_id`를 정하므로 CLI의 기본 구독과 관계없이 이 구독에서만 동작합니다.
 
 ```bash
@@ -40,7 +46,7 @@ terraform plan
 
 plan에서 예상한 변경만 있는지 확인한 뒤 `terraform apply`를 실행합니다. Azure 리소스나 데이터를 삭제하기 전에는 영향을 별도로 확인합니다.
 
-state는 이 구독의 Storage account `tfstatece097188`(리소스 그룹 `rg-terraform-state`) container `tfstate`에 `dmz/<이름>-dmz.tfstate`로 저장합니다.
+state는 이 구독의 Storage account `tfstatece097188`(리소스 그룹 `rg-terraform-state`) container `tfstate`에 `dmz/<이름>-dmz.tfstate`로 저장합니다(예: `dmz/forge-desktop-dmz.tfstate`).
 Storage account는 Terraform 밖에서 Azure CLI로 만들었습니다. shared key를 끄고 blob versioning과 30일 삭제 보존을 켰습니다.
 backend는 Entra 인증(`use_azuread_auth = true`)을 쓰므로 state를 읽고 쓰려면 그 Storage account의 `Storage Blob Data Contributor`가 필요합니다.
 잠금은 blob lease입니다. backend key는 임의로 바꾸지 마세요.

@@ -25,6 +25,7 @@ jobs:
         directory:
           - dmz/3-domain
           - dmz/8-runway-target
+          - dmz/8-forge-desktop
     defaults:
       run:
         working-directory: ${{ matrix.directory }}
@@ -38,3 +39,19 @@ jobs:
       - run: terraform fmt -check
       - run: terraform init -backend=false -input=false
       - run: terraform validate
+
+  packer:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: images/dev-desktop-win10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-packer@v3
+        with:
+          version: '1.16.2'
+      - run: packer fmt -check .
+      - run: packer init .
+      - run: packer validate -var image_version=0.0.0 -var allowed_inbound_ip=127.0.0.1 .
