@@ -53,5 +53,8 @@ jobs:
         with:
           version: '1.16.2'
       - run: packer fmt -check .
+      # Unauthenticated GitHub API calls of the plugin getter share the runner IP's rate limit.
       - run: packer init .
+        env:
+          PACKER_GITHUB_API_TOKEN: ${{ github.token }}
       - run: packer validate -var image_version=0.0.0 -var allowed_inbound_ip=127.0.0.1 .
