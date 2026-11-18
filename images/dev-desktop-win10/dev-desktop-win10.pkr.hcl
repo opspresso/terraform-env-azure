@@ -170,8 +170,11 @@ build {
     destination = "C:\\Windows\\Temp\\cumulative-update.json"
   }
 
+  # wusa refuses a WinRM remote session (exit 5, access denied), so the update installs as SYSTEM in a scheduled task.
   provisioner "powershell" {
-    script = "${path.root}/scripts/install-cumulative-update.ps1"
+    script            = "${path.root}/scripts/install-cumulative-update.ps1"
+    elevated_user     = "SYSTEM"
+    elevated_password = ""
   }
 
   provisioner "windows-restart" {

@@ -52,7 +52,7 @@ Windows Update는 ESU 누적 업데이트를 제공하지 않습니다. 2026-11-
 그래서 이미지가 Microsoft Update Catalog의 누적 업데이트를 직접 설치합니다.
 
 - 변수 `cumulative_update`에 KB, Catalog 다운로드 URL, Catalog 파일 이름의 SHA-1, 설치 후 OS build를 고정합니다.
-- `scripts/install-cumulative-update.ps1`은 SHA-1이 다르면 실패합니다. 그다음 `wusa /quiet /norestart`로 설치하고 VM을 다시 시작합니다.
+- `scripts/install-cumulative-update.ps1`은 SHA-1이 다르면 실패합니다. 그다음 `wusa /quiet /norestart`로 설치하고 VM을 다시 시작합니다. `wusa`는 WinRM 원격 session에서 거부(exit 5)되므로 이 단계는 SYSTEM 예약 작업(`elevated_user = "SYSTEM"`)으로 실행합니다.
 - `verify.ps1`은 OS build가 `cumulative_update.build`보다 낮으면 빌드를 실패시킵니다.
 - 같은 방법으로 session host에 KB5131096을 설치했습니다. 다시 시작한 뒤 OS build는 `19045.7846`이었고, 개발 도구도 그대로 실행됐습니다.
 
