@@ -7,7 +7,7 @@ Agent Forge 개발자 데스크톱의 Windows 10 이미지를 Packer로 빌드�
 
 | 층 | 내용 |
 | --- | --- |
-| OS | `MicrosoftWindowsDesktop:Windows-10:win10-22h2-ent-g2:latest`(Windows 10 Enterprise 22H2 single-session, Gen2)와 빌드 시점의 Windows Update(Preview 제외) |
+| OS | `MicrosoftWindowsDesktop:Windows-10:win10-22h2-ent-g2:latest`(Windows 10 Enterprise 22H2 single-session, Gen2), 고정한 누적 업데이트([누적 업데이트](#누적-업데이트))와 빌드 시점의 Windows Update(Preview 제외) |
 | 개발 도구 | Git for Windows, VS Code(system installer), Node.js LTS(MSI), Python 3(all users). 모두 machine-wide로 설치하고 machine `PATH`에 둔다 |
 | 코딩 CLI | `@anthropic-ai/claude-code`, `@openai/codex`, `opencode-ai`. npm으로 `C:\Program Files\npm-global`에 설치하고 그 디렉터리를 machine `PATH`에 더한다 |
 | ESU | `EnableESUSubscriptionCheck = 1`([ESU](#esu)) |
@@ -40,10 +40,26 @@ Windows 10 지원은 2025-10-14에 끝났습니다. Azure Virtual Desktop sessio
   Licensing CSP `./Device/Vendor/MSFT/Policy/Config/Licensing/EnableESUSubscriptionCheck`(Integer `1`)이고, registry 값은
   `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SoftwareProtectionPlatform\ESU`의 `EnableESUSubscriptionCheck`(REG_DWORD `1`)입니다.
   `scripts/enable-esu.ps1`이 이 값을 씁니다.
-- 같은 문서의 전제 조건은 KB5066791 이후 업데이트와 ESU Licensing Preparation Package KB5072653입니다. 빌드의 Windows Update 단계가 설치합니다.
+- 같은 문서의 전제 조건은 KB5066791 이후 업데이트와 ESU Licensing Preparation Package KB5072653입니다. 고정한 누적 업데이트와 빌드의 Windows Update 단계가 설치합니다.
 - 같은 문서는 Azure Virtual Desktop을 "No additional configuration or keys are needed" 환경으로도 적습니다. 두 문서가 다르므로, 정책 값을 켜 두는 쪽을 택했습니다. 이 값은 ESU 키를 설치하지 않습니다.
 
-빌드 로그의 `verify.ps1` 출력에서 OS build(`19045.<UBR>`)와 정책 값을 확인합니다. UBR이 source 이미지보다 크면 지원 종료 뒤의 ESU 누적 업데이트를 받은 것입니다.
+## 누적 업데이트
+
+Windows Update는 ESU 누적 업데이트를 제공하지 않습니다. 2026-11-18 확인 결과는 다음과 같습니다.
+- Packer 빌드 VM: 정책 값을 켜고 KB5126256(ESU Licensing Preparation Package)을 설치한 뒤에도 누적 업데이트가 없었습니다.
+- host pool에 등록되어 `Available`인 session host: 검색 결과가 0개였습니다. OS build는 source 이미지와 같은 `19045.6456`(2025-10, KB5066791)이었습니다.
+
+그래서 이미지가 Microsoft Update Catalog의 누적 업데이트를 직접 설치합니다.
+
+- 변수 `cumulative_update`에 KB, Catalog 다운로드 URL, Catalog 파일 이름의 SHA-1, 설치 후 OS build를 고정합니다.
+- `scripts/install-cumulative-update.ps1`은 SHA-1이 다르면 실패합니다. 그다음 `wusa /quiet /norestart`로 설치하고 VM을 다시 시작합니다.
+- `verify.ps1`은 OS build가 `cumulative_update.build`보다 낮으면 빌드를 실패시킵니다.
+- 같은 방법으로 session host에 KB5131096을 설치했습니다. 다시 시작한 뒤 OS build는 `19045.7846`이었고, 개발 도구도 그대로 실행됐습니다.
+
+새 이미지 버전을 만들 때마다 `cumulative_update`를 최신 누적 업데이트로 바꿉니다. 대상은 Catalog의 "Cumulative Update for Windows 10 Version 22H2 for x64-based Systems" 중 분류가 Security Updates인 최신 항목입니다.
+배포된 데스크톱도 Windows Update로 ESU 누적 업데이트를 받지 않습니다. 따라서 데스크톱의 보안 수준은 이미지 버전이 정합니다. Forge는 기존 데스크톱의 이미지를 바꾸지 않습니다.
+
+빌드 로그의 `verify.ps1` 출력에서 OS build(`19045.<UBR>`)와 정책 값을 확인합니다.
 
 ## 준비
 

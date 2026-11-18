@@ -3,8 +3,8 @@
 # Azure Virtual Desktop", section 3), pointing to "Enable Windows 10 Extended Security Updates (ESU) for clients
 # accessing cloud and virtual machines". That page's policy is the Licensing CSP setting EnableESUSubscriptionCheck
 # (./Device/Vendor/MSFT/Policy/Config/Licensing/EnableESUSubscriptionCheck = 1), stored in the registry value below.
-# The same page requires KB5066791 or later and the ESU Licensing Preparation Package KB5072653; Windows Update
-# installs them in the next build step.
+# The same page requires KB5066791 or later and the ESU Licensing Preparation Package KB5072653; the pinned cumulative
+# update (install-cumulative-update.ps1) and Windows Update install them in the next build steps.
 $ErrorActionPreference = 'Stop'
 
 $esu = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\SoftwareProtectionPlatform\ESU'

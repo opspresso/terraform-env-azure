@@ -80,6 +80,23 @@ variable "tools" {
   }
 }
 
+# The Windows 10 cumulative update the image installs from the Microsoft Update Catalog. Windows Update offers no
+# ESU cumulative update to the build VM or to a registered session host, so the image carries it. The SHA-1 is the
+# one Microsoft publishes in the Catalog file name; wusa also checks the package signature. Move this to the newest
+# "Security Updates" release of "Cumulative Update for Windows 10 Version 22H2 for x64-based Systems" and set build to
+# the OS build it gives; verify.ps1 fails the build below that build.
+variable "cumulative_update" {
+  description = "Pinned Windows 10 22H2 cumulative update: KB, Catalog URL, published SHA-1 and resulting OS build."
+  type        = object({ kb = string, url = string, sha1 = string, build = string })
+  default = {
+    # 2026-11 Cumulative Update for Windows 10 Version 22H2 for x64-based Systems, released 2026-11-10.
+    kb    = "KB5131096"
+    url   = "https://catalog.s.download.windowsupdate.com/c/msdownload/update/software/secu/2026/11/windows10.0-kb5131096-x64_b087ef80eeab901ffe82a98338318c42a544c05c.msu"
+    sha1  = "b087ef80eeab901ffe82a98338318c42a544c05c"
+    build = "19045.7846"
+  }
+}
+
 source "azure-arm" "win10" {
   use_azure_cli_auth = true
   subscription_id    = var.subscription_id
@@ -146,6 +163,19 @@ build {
 
   provisioner "powershell" {
     script = "${path.root}/scripts/enable-esu.ps1"
+  }
+
+  provisioner "file" {
+    content     = jsonencode(var.cumulative_update)
+    destination = "C:\\Windows\\Temp\\cumulative-update.json"
+  }
+
+  provisioner "powershell" {
+    script = "${path.root}/scripts/install-cumulative-update.ps1"
+  }
+
+  provisioner "windows-restart" {
+    restart_timeout = "30m"
   }
 
   provisioner "windows-update" {
