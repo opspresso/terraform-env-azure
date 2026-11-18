@@ -19,6 +19,7 @@ Agent Forge 개발자 데스크톱(Azure Virtual Desktop 개인 host pool)의 �
 | Azure Policy | `forge-desktop-host-pool-personal-direct`(정의: 구독, 할당: `rg-forge-desktop-dmz`) | `hostPoolType`이 Personal이 아니거나 `personalDesktopAssignmentType`이 Direct가 아닌 host pool을 거부한다 |
 | Entra 보안 그룹 | `DevDesktop-Users` | 데스크톱에 로그인할 수 있는 사용자(`desktop_users`). 이 테넌트에서는 시험 사용자 `jyyu@clush.ai`만 멤버다 |
 | Entra 앱 | `agent-forge-desktop` | Agent Forge의 신원(`forge_client_id`). secret과 인증서가 없다 |
+| 테넌트 설정 | `Windows Cloud Login`의 `remoteDesktopSecurityConfiguration` | Microsoft Entra authentication for RDP를 켠다([준비](#준비)) |
 
 scaling plan은 azapi(`Microsoft.DesktopVirtualization/scalingPlans@2024-04-03`)로 만듭니다. azurerm `5.14.0`의 `azurerm_virtual_desktop_scaling_plan`은 pooled scaling plan만 만듭니다.
 host pool 등록 token은 Terraform이 관리하지 않습니다. Agent Forge가 갱신합니다. 그래서 token이 state에 남지 않습니다.
@@ -56,10 +57,12 @@ user session 로그오프는 `usersessions/delete`입니다. Entra 기기 객체
 
 - `Microsoft.DesktopVirtualization` resource provider를 등록합니다(`az provider register -n Microsoft.DesktopVirtualization`). 이 구독은 등록했습니다.
 - 적용하는 사용자는 구독 Owner와 테넌트에서 앱 등록·보안 그룹 생성 권한이 필요합니다. 앱·그룹의 owner는 적용한 사용자입니다.
-- 사용자가 Entra 인증(`enablerdsaadauth:i:1`)으로 접속하려면 테넌트에서 Microsoft Entra authentication for RDP를 켜야 합니다.
-  Microsoft Graph로 service principal `Microsoft Remote Desktop`(`a4a365df-50f1-4397-bc59-1a1564b8bb9c`)과 `Windows Cloud Login`(`270efc09-cd0d-444b-a71f-39af4910ec45`)의
-  `remoteDesktopSecurityConfiguration`에 `isRemoteDesktopProtocolEnabled = true`를 설정합니다(Microsoft Learn "Configure single sign-on for Azure Virtual Desktop using Microsoft Entra ID").
-  이 root는 그 테넌트 설정을 바꾸지 않습니다.
+- 사용자는 Windows App에서 Entra 계정·MFA로 로그인합니다(host pool `enablerdsaadauth:i:1`). 그러려면 테넌트에서 Microsoft Entra authentication for RDP가 켜져 있어야 합니다.
+  `55-rdp-sign-in.tf`가 service principal `Windows Cloud Login`(`270efc09-cd0d-444b-a71f-39af4910ec45`)의 `remoteDesktopSecurityConfiguration.isRemoteDesktopProtocolEnabled`를 `true`로 바꿉니다
+  (Microsoft Learn "Configure single sign-on for Azure Virtual Desktop using Microsoft Entra ID"). 이 리소스를 적용하려면 Entra 역할 **Application Administrator** 또는
+  **Cloud Application Administrator**가 필요합니다. 역할이 없으면 Microsoft Graph가 `403 Authorization_RequestDenied`를 돌려주고, 나머지 리소스는 그대로 적용됩니다.
+  target device group은 두지 않습니다. 사용자는 새 데스크톱에 처음 접속할 때 연결 허용 대화 상자를 한 번 확인합니다(Entra가 최대 15개 host를 30일 동안 기억한다).
+  `terraform destroy`는 이 설정을 끄지 않습니다.
 - 사용자에게 AVD 사용 자격 라이선스(예: Microsoft 365 E3/E5, Windows Enterprise E3/E5)가 있어야 합니다.
 
 ## 적용 순서
