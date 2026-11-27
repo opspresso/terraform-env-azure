@@ -1,6 +1,6 @@
 # 8-forge-desktop
 
-Agent Forge 개발자 데스크톱(Azure Virtual Desktop 개인 host pool)의 기반 리소스입니다. Agent Forge는 AWS 계정 opspresso(`396608815058`)의 `eks-demo`에서 실행됩니다.
+Agent Forge 개발자 데스크톱(Azure Virtual Desktop 개인 host pool)의 기반 리소스입니다. 기존 Agent Forge는 AWS 계정 opspresso(`396608815058`)의 `eks-demo`에서 실행됩니다.
 설계는 agent-platform `docs/DEV_DESKTOP.md`의 "Azure 자원과 네트워크"·"신원과 권한"이고, 이미지는 [`images/dev-desktop-win10`](../../images/dev-desktop-win10/README.md)이 만듭니다.
 이 root는 데스크톱 VM을 만들지 않습니다. 데스크톱마다 VM·NIC·디스크·extension은 Agent Forge가 ARM 배포로 `rg-forge-desktop-dmz-hosts`에 만들고 지웁니다.
 
@@ -62,6 +62,10 @@ user session 로그오프는 `usersessions/delete`입니다. Entra 기기 객체
   2026-11-18에 이 설정이 `false`인 테넌트에서 Windows App 웹 클라이언트로 로그인했습니다. 사용자는 "원격 데스크톱 연결 허용" 대화 상자를 승인했고 데스크톱에 접속했습니다.
   대화 상자를 없애려면 Entra 역할 Application Administrator 또는 Cloud Application Administrator 보유자가 이 설정을 켜고 target device group을 지정합니다.
 - 사용자에게 AVD 사용 자격 라이선스(예: Microsoft 365 E3/E5, Windows Enterprise E3/E5)가 있어야 합니다.
+
+## Axleon 설치
+
+EKS `axleon`의 Forge는 전용 Entra 앱, VM 리소스 그룹과 개인 호스트 풀을 사용합니다. 기존 설치와 데스크톱 subnet, 이미지, Windows App workspace, 사용자 그룹과 유휴 할당 해제 정책을 공유합니다. `terraform output axleon_forge_desktop`에서 Axleon 전용 앱 ID, 리소스 그룹, 호스트 풀 ID를 확인해 Forge 풀에 입력합니다.
 
 ## 적용 순서
 
