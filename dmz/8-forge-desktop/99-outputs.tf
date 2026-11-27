@@ -52,3 +52,11 @@ output "trusted_launch" {
 output "egress_ip" {
   value = azurerm_public_ip.egress.ip_address
 }
+
+output "axleon_forge_desktop" {
+  value = {
+    client_id              = azuread_application.axleon_forge.client_id
+    desktop_resource_group = azurerm_resource_group.axleon_hosts.name
+    host_pool_id           = azurerm_virtual_desktop_host_pool.axleon.id
+  }
+}

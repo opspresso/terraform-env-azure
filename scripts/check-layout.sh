@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Checks the file layout rules in README.md ("Terraform 작성 규칙") for every root under dmz/.
+# Checks the file layout rules in docs/OPERATIONS.md ("Terraform 작성 규칙") for every root under dmz/.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -32,10 +32,12 @@ for root in dmz/*/; do
   [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || err "$root/02-backend.tf" "required_version must pin an exact version"
   [[ "$(cat "$root/.terraform-version" 2>/dev/null || true)" == "$version" ]] ||
     err "$root/.terraform-version" "must equal required_version ($version)"
-  # The state lives in Azure Storage with Entra authentication (README "준비와 실행").
+  # The state lives in Azure Storage with Entra authentication (docs/OPERATIONS.md "준비와 실행").
   grep -qE '^    use_azuread_auth     = true$' "$root/02-backend.tf" 2>/dev/null || err "$root/02-backend.tf" "backend needs use_azuread_auth = true"
-  # The azurerm provider works only in the subscription of the variable (README "코드").
-  grep -qE '^  subscription_id = var\.subscription_id$' "$root/02-backend.tf" 2>/dev/null || err "$root/02-backend.tf" "azurerm provider needs subscription_id = var.subscription_id"
+  # The azurerm provider works only in the subscription of the variable (docs/OPERATIONS.md "코드").
+  if grep -qE '^provider "azurerm" |^[ ]+azurerm = |^(resource|data) "azurerm_' "$root"/*.tf; then
+    grep -qE '^  subscription_id = var\.subscription_id$' "$root/02-backend.tf" 2>/dev/null || err "$root/02-backend.tf" "azurerm provider needs subscription_id = var.subscription_id"
+  fi
 
   for file in "$root"/*.tf; do
     [[ "$(basename "$file")" =~ ^[0-9]{2}-[a-z0-9]+(-[a-z0-9]+)*\.tf$ ]] || err "$file" "name must be NN-<topic>.tf"

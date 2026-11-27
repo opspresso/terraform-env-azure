@@ -35,8 +35,8 @@ resource "azapi_resource" "scaling_plan" {
       hostPoolType = "Personal"
       timeZone     = var.time_zone
       schedules    = []
-      hostPoolReferences = [{
-        hostPoolArmPath    = azurerm_virtual_desktop_host_pool.this.id
+      hostPoolReferences = [for pool in [azurerm_virtual_desktop_host_pool.this, azurerm_virtual_desktop_host_pool.axleon] : {
+        hostPoolArmPath    = pool.id
         scalingPlanEnabled = true
       }]
     }

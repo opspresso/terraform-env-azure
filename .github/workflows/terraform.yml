@@ -26,6 +26,7 @@ jobs:
           - dmz/3-domain
           - dmz/8-runway-target
           - dmz/8-forge-desktop
+          - dmz/8-agentops-login
     defaults:
       run:
         working-directory: ${{ matrix.directory }}
@@ -39,6 +40,8 @@ jobs:
       - run: terraform fmt -check
       - run: terraform init -backend=false -input=false
       - run: terraform validate
+      - if: matrix.directory == 'dmz/8-agentops-login'
+        run: terraform test
 
   packer:
     runs-on: ubuntu-latest
